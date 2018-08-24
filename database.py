@@ -8,7 +8,7 @@ mydb = mysql.connector.connect(
   database=dbConf.database()
 )
 
-mycursor = mydb.cursor(dictionary=True)
+mycursor = mydb.cursor(dictionary=True,buffered=True)
 
 def updateSingleField(field='',value=''):
 	sql = "UPDATE `tbl_broker` SET `VALUE`='" +value+ "' WHERE FIELD = '" + field +"';" 

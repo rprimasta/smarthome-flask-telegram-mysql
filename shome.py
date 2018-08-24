@@ -6,6 +6,7 @@ import json
 import thread
 import time
 import sys
+from raven.contrib.flask import Sentry
 
 
 #=====================TELEGRAM SERVICE==================
@@ -45,6 +46,10 @@ def telegram_pooling( threadName, delay):
 #========================WEB SERVICE====================
 app = Flask(__name__)
 app.logger.disabled = True
+sentry = Sentry(app, dsn='https://ddf4d10c09ab417882af9c644e013f10:b739844829d94d58b71e800f2f3410cc@sentry.io/1267055')
+sentry.init_app(app)
+
+
 def simpleSync(parameter):
 	db.updateField(parameter)
 	return db.getValue()
@@ -77,7 +82,7 @@ def incomingGET(req = None):
 		return 'User Error !'
 	if 'psw' not in req.args :
 		return 'Password Error !'
-
+	
 	jobj = {}
 	whois = db.auth(req.args['user'],req.args['psw'])
 	if not whois:
@@ -89,16 +94,22 @@ def incomingGET(req = None):
 @app.route('/',methods=['GET', 'POST'])
 def iot():
 	ret = ''
-	if request.method == 'POST':
-		ret = incomingPOST(request)
-	else :
-		ret = incomingGET(request)
+	try:
+		if request.method == 'POST':
+			ret = incomingPOST(request)
+		else :
+			ret = incomingGET(request)
 
-	if ret is None:
+		if ret is None:
+			jobj = {}
+			jobj['status'] = -1
+			ret = json.dumps(jobj)
+			#print ret
+	except ZeroDivisionError:
+    		sentry.captureException()
 		jobj = {}
 		jobj['status'] = -1
-		ret = json.dumps(jobj)
-		#print ret
+		ret = json.dumps(jobj)	
 	return ret
 
 @app.errorhandler(500)
@@ -107,6 +118,9 @@ def internal_error(error):
     return
 
 if __name__ == '__main__':
+
+	sentry.captureMessage('Smart Home Started...')
+
 	try:
 		thread.start_new_thread( telegram_pooling, ("Thread-Telegram", 5, ) )
 	except:

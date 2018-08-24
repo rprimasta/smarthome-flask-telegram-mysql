@@ -94,6 +94,8 @@ def getUpdate():
 		return None
 
 	id = getChatId(res)
+	print len(id)
+
 	resMsg = []
 	for item in id:
 		msgList = getNewestById(item,res)
