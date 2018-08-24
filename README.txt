@@ -14,5 +14,5 @@ RESTART SERVICE
   sudo systemctl restart romi@shome.service
   [input your password]
 LOG
-  tail -f /var/log/messages
+  sudo tail -f /var/log/messages
   [input your password]
