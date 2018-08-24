@@ -6,6 +6,7 @@ import time
 import requests
 import urllib
 from parse import *
+import pprint
 
 text_welcome = "Permintaan anda berhasil diproses.\r\nTerima Kasih."
 #IGNORING LOW/UPPERCASE
@@ -51,15 +52,20 @@ def sendMsg(chatId, txt):
 	params = {'chat_id': chatId, 'text': txt, 'parse_mode': 'HTML'}
         method = 'sendMessage'
 	global api_url
+	#s = requests.session()
+	#s.config['keep_alive'] = False
        	send = requests.post(api_url + method, params)
-       	return send
+       	print send
+	return send
 
 def available (offset = 0, timeout = 10):
 	method = 'getUpdates'
        	params = {'timeout': timeout, 'offset': offset}
        	global api_url
 	url = api_url + method +'?'+  urllib.urlencode(params)
- 	response = requests.get(url)
+ 	#s = requests.session()
+	#s.config['keep_alive'] = False
+	response = requests.get(url)
 	#print url
 	if response.status_code != 200:
 		return None
@@ -69,10 +75,9 @@ def available (offset = 0, timeout = 10):
 def getChatId(dict):
 	clist = []
 	for item in dict:
-		itm = item['message']['from']['id']
+		itm = item.values()[0]['from']['id']
 		if itm not in clist:
- 			clist.append(itm)
-	print clist
+			clist.append(itm)
 	return clist
 
 def getNewestById(cid, dict):
@@ -80,38 +85,35 @@ def getNewestById(cid, dict):
 	lastMsg = None
 	#print "Search id " + str(cid)
 	for item in dict:
-		if cid == item['message']['chat']['id']:
-			if item['message']['message_id'] > lastUpdate:
-				lastUpdate = item['message']['message_id']
+		if cid == item.values()[0]['from']['id']:
+			if item.values()[0]['message_id'] > lastUpdate:
+				lastUpdate = item.values()[0]['message_id']
 				lastMsg = item
 	return lastMsg
 
 def getUpdate(): 
 	global newOffset
 	res = available(offset=newOffset)
-	#print res
 	if res == None:
 		return None
 
 	id = getChatId(res)
-	print len(id)
-
+	if id is None:
+		return None
+	print "ISI ID : " + str(len(id))
 	resMsg = []
 	for item in id:
 		msgList = getNewestById(item,res)
 		global newOffset
 		if newOffset.has_key(str(item)) is True:
-			#print msgList['message']['text']
 			global newOffset
-			#print str(msgList['message']['message_id']) +"|||"+str( newOffset[str(item)])
-			if msgList['message']['message_id'] >= newOffset[str(item)]:
+			if msgList.values()[0]['message_id'] >= newOffset[str(item)]:
 				print "New Message ...."
-				resMsg.append(msgList['message'])
+				resMsg.append(msgList.values()[0])
 
 		global newOffset
-		newOffset[str(item)] = msgList['message']['message_id'] + 1
+		newOffset[str(item)] = msgList.values()[0]['message_id'] + 1
 		print newOffset
-	#print resMsg
 	return resMsg
 
 

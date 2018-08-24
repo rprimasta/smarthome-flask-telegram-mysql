@@ -7,6 +7,12 @@ import thread
 import time
 import sys
 from raven.contrib.flask import Sentry
+#from threading import Thread
+
+#kill all with 
+#pkill --signal 9 -e -f shome.py
+#import os
+#os.system('pkill --signal 9 -e -f shome.py')
 
 
 #=====================TELEGRAM SERVICE==================
@@ -32,13 +38,12 @@ def cmd_exec(mobile_id,mode,name,key,val):
 			
 
 def telegram_pooling( threadName, delay):
-	#print "%s: %s" % ( threadName, time.ctime(time.time()) )
+	print "Init Thread pooling"
+	print "%s: %s" % ( threadName, time.ctime(time.time()) )
 	while True:
 		msg = tg.getUpdate()
 		if tg.waitNewMsg(msg) > 0:
 			print ("Ada Pesan")
-			#print tg.msgProcessing(msg)
-			#print len(msg)
 			mobile_id,(mode,name,key,val) = tg.msgProcessing(msg)
 			cmd_exec(mobile_id,mode,name,key,val)
 		time.sleep(delay)
@@ -117,12 +122,7 @@ def internal_error(error):
     app.logger.error('Server Error: %s', (error))
     return
 
-if __name__ == '__main__':
+thread.start_new_thread(telegram_pooling,("Thread-Telegram",10, ))
+sentry.captureMessage('Smart Home Started...')
+app.run(host='0.0.0.0',port=6001,debug=False)
 
-	sentry.captureMessage('Smart Home Started...')
-
-	try:
-		thread.start_new_thread( telegram_pooling, ("Thread-Telegram", 5, ) )
-	except:
-		print "Error: unable to start thread"
-	app.run(host='0.0.0.0',port=6001,debug=True)
