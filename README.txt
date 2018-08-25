@@ -22,3 +22,15 @@ LOG
 
 SERVICE SCRIPT
   nano /home/romi/service/romi@shome.service
+
+#===================/home/romi/service/romi@shome.service======================
+[Unit]
+Description=Smart Home Romi at Port 6001
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/stdbuf -oL /usr/bin/python /home/romi/service/shome.py >/home/romi/service/stdout.log >/home/romi/service/stderr.log
+
+[Install]
+WantedBy=multi-user.target
+#==============================================================================
